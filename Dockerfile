@@ -9,4 +9,4 @@ COPY . .
 
 ENV PYTHONBUFFERED=1
 
-CMD ["sh", "-c", "uvicorn api:app & python server.py --host 0.0.0.0 --port 8080"]
+CMD ["sh", "-c", "python server.py & uvicorn api:app --host 0.0.0.0 --port 8080"]
