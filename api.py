@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from services import convert_currency_service, get_prime_rate_service
+from services import convert_currency_service, prime_rates_service
 
 app = FastAPI(title="Currency Bot API", description="API for currency conversion and prime rate retrieval.", version="1.0")
 
@@ -9,4 +9,4 @@ def convert_currency(currency_code: str = "INR", date_str: str = "latest"):
 
 @app.get("/prime_rate")
 def prime_rate(date_str: str = "latest"):
-    return get_prime_rate_service(date_str)
+    return prime_rates_service(date_str)
