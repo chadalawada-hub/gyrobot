@@ -6,7 +6,7 @@ fly secrets set FRED_BASE_URL="https://api.stlouisfed.org/fred/series/observatio
 echo "Done adding FRED_BASE_URL"
 fly secrets set EXCHANGE_API_KEY="a72202fa18e8f2d6e43d782685c90e6b"
 echo "Done adding EXCHANGE_API_KEY"
-fly secrets set EXCHANGE_RATE_URL="https://api.exchangerate.host/historical?date={date_str}&access_key={EXCHANGE_API_KEY}"D
+fly secrets set EXCHANGE_RATE_URL="https://api.exchangerate.host/historical?date={date_str}&access_key={EXCHANGE_API_KEY}"
 echo "Done adding EXCHANGE_RATE_URL"
 
 echo "All secrets added successfully!"

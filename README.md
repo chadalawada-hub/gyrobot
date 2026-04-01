@@ -1,243 +1,152 @@
-# gyrobot
+# Gyrobot MCP Server
 
-curl -L httosL//fly.io/install.sh | sh
-fly auth login
+## Overview
+This repository provides a small MCP-based currency and prime-rate service:
 
-fly launch
-fly secrets set 
+- `services.py` contains business logic:
+  - `convert_currency_service(currency_code, date_str)`
+  - `prime_rates_service(date_str)`
+- `server.py` exposes the tools with FastMCP
+- `mcp_adapter/server.py` wraps a remote/base API as an MCP tool and includes binding logic for agents
 
-fly deploy
+## Local setup
 
+### 1. System prerequisites
+- macOS/Linux/Windows with a shell
+- Python 3.11+ recommended
+- `pip` (Python package manager)
 
-https://api.stlouisfed.org/fred/series/observations?series_id=DPRIME&api_key=06c73d0a311e793c2b08989ee10b5352&file_type=json&observation_start=2026-01-01&observation_end=2026-01-01
-
-https://api.exchangerate.host/2026-01-01?base=EUR&symbols=USD&access_key=a72202fa18e8f2d6e43d782685c90e6b
-
-https://api.exchangerate.host/live?access_key=a72202fa18e8f2d6e43d782685c90e6b&symbols=USD,EUR
-
-
-
+### 2. Clone repository
+```bash
+git clone https://github.com/<username>/gyrobot.git
+cd gyrobot
 ```
-https://api.stlouisfed.org/fred/series/observations?series_id=MPRIME&api_key=06c73d0a311e793c2b08989ee10b5352&file_type=json&observation_start=2026-01-01&observation_end=2026-04-01
 
+### 3. Create virtual environment and install deps
+```bash
+python -m venv .venv
+source .venv/bin/activate   # macOS/Linux
+.venv\Scripts\activate     # Windows
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+Create `.env` with values (or use `export` / `set`):
+```
+FRED_API_KEY=<your_fred_api_key>
+EXCHANGE_API_KEY=<your_exchange_api_key>
+EXCHANGE_RATE_URL=https://api.exchangerate.host/{date_str}?base={currency_code}&symbols=USD&access_key={EXCHANGE_API_KEY}
+FRED_BASE_URL=https://api.stlouisfed.org/fred/series/observations?series_id=MPRIME&api_key={FRED_API_KEY}&file_type=json&observation_start={start_date}&observation_end={end_date}
+API_BASE=http://localhost:8000
+```
+
+### 5. Run the service
+```bash
+python server.py
+```
+
+Then visit:
+- `http://localhost:8000/tool/convert_currency_tool?currency_code=EUR&date_str=2026-01-01`
+- `http://localhost:8000/tool/prime_rates_tool?date_str=2026-01-01`
+
+## MCP config (mcp.json)
+
+Create a `mcp.json` in user workspace with a tool entry:
+```json
 {
-  "realtime_start": "2026-04-01",
-  "realtime_end": "2026-04-01",
-  "observation_start": "2026-01-01",
-  "observation_end": "2026-04-01",
-  "units": "lin",
-  "output_type": 1,
-  "file_type": "json",
-  "order_by": "observation_date",
-  "sort_order": "asc",
-  "count": 2,
-  "offset": 0,
-  "limit": 100000,
-  "observations": [
+  "tools": [
     {
-      "realtime_start": "2026-04-01",
-      "realtime_end": "2026-04-01",
-      "date": "2026-01-01",
-      "value": "6.75"
-    },
-    {
-      "realtime_start": "2026-04-01",
-      "realtime_end": "2026-04-01",
-      "date": "2026-02-01",
-      "value": "6.75"
+      "name": "currency_mcp_server",
+      "type": "http",
+      "url": "http://localhost:8000",
+      "api_key": "<your_api_key_optional>",
+      "timeout": 120000
     }
   ]
 }
-
 ```
 
-```
+> For Claude Agent usage, point the tool endpoint to local `mcp_adapter/server.py` or proxied API (see MCA docs).
 
-Request
-"https://api.exchangerate.host/historical?date=2026-01-01&access_key=a72202fa18e8f2d6e43d782685c90e6b"
+## Configuring in VS Code (using MCP extension / custom tooling)
 
-Response
+1. Install MCP extension or Claude integration extension.
+2. Create `.vscode/settings.json` (or use extension GUI):
+```json
 {
-  "success": true,
-  "terms": "https://currencylayer.com/terms",
-  "privacy": "https://currencylayer.com/privacy",
-  "historical": true,
-  "date": "2026-01-01",
-  "timestamp": 1767311999,
-  "source": "USD",
-  "quotes": {
-    "USDAED": 3.672502,
-    "USDAFN": 66.106128,
-    "USDALL": 82.462283,
-    "USDAMD": 381.646874,
-    "USDANG": 1.790403,
-    "USDAOA": 917.000358,
-    "USDARS": 1449.789101,
-    "USDAUD": 1.497466,
-    "USDAWG": 1.8025,
-    "USDAZN": 1.699408,
-    "USDBAM": 1.666106,
-    "USDBBD": 2.015555,
-    "USDBDT": 122.381003,
-    "USDBGN": 1.666696,
-    "USDBHD": 0.376969,
-    "USDBIF": 2960.464106,
-    "USDBMD": 1,
-    "USDBND": 1.286514,
-    "USDBOB": 6.930128,
-    "USDBRL": 5.518502,
-    "USDBSD": 1.000707,
-    "USDBTC": 0.000011412112,
-    "USDBTN": 90.075562,
-    "USDBWP": 13.139445,
-    "USDBYN": 2.939776,
-    "USDBYR": 19600,
-    "USDBZD": 2.012659,
-    "USDCAD": 1.37185,
-    "USDCDF": 2164.999632,
-    "USDCHF": 0.79208,
-    "USDCLF": 0.022945,
-    "USDCLP": 900.140156,
-    "USDCNY": 6.996402,
-    "USDCNH": 6.97704,
-    "USDCOP": 3769.96,
-    "USDCRC": 497.073782,
-    "USDCUC": 1,
-    "USDCUP": 26.5,
-    "USDCVE": 93.933689,
-    "USDCZK": 20.581497,
-    "USDDJF": 177.719723,
-    "USDDKK": 6.356265,
-    "USDDOP": 63.090461,
-    "USDDZD": 129.565162,
-    "USDEGP": 47.645601,
-    "USDERN": 15,
-    "USDETB": 155.306806,
-    "USDEUR": 0.85106,
-    "USDFJD": 2.273298,
-    "USDFKP": 0.743772,
-    "USDGBP": 0.742235,
-    "USDGEL": 2.694991,
-    "USDGGP": 0.743772,
-    "USDGHS": 10.508067,
-    "USDGIP": 0.743772,
-    "USDGMD": 73.999504,
-    "USDGNF": 8754.802491,
-    "USDGTQ": 7.675532,
-    "USDGYD": 209.36909,
-    "USDHKD": 7.785855,
-    "USDHNL": 26.382819,
-    "USDHRK": 6.412952,
-    "USDHTG": 130.968506,
-    "USDHUF": 326.970137,
-    "USDIDR": 16675,
-    "USDILS": 3.186885,
-    "USDIMP": 0.743772,
-    "USDINR": 89.9869,
-    "USDIQD": 1310.962883,
-    "USDIRR": 42052.869325,
-    "USDISK": 125.279742,
-    "USDJEP": 0.743772,
-    "USDJMD": 159.029535,
-    "USDJOD": 0.708989,
-    "USDJPY": 156.741499,
-    "USDKES": 129.089754,
-    "USDKGS": 87.4435,
-    "USDKHR": 4009.813693,
-    "USDKMF": 420.000426,
-    "USDKPW": 899.994146,
-    "USDKRW": 1444.639721,
-    "USDKWD": 0.30769,
-    "USDKYD": 0.833994,
-    "USDKZT": 507.398605,
-    "USDLAK": 21633.571009,
-    "USDLBP": 89616.523195,
-    "USDLKR": 309.880992,
-    "USDLRD": 178.128754,
-    "USDLSL": 16.565363,
-    "USDLTL": 2.95274,
-    "USDLVL": 0.60489,
-    "USDLYD": 5.41968,
-    "USDMAD": 9.125364,
-    "USDMDL": 16.842652,
-    "USDMGA": 4593.353608,
-    "USDMKD": 52.457549,
-    "USDMMK": 2101.528199,
-    "USDMNT": 3558.945081,
-    "USDMOP": 8.023887,
-    "USDMRU": 39.738642,
-    "USDMUR": 46.249978,
-    "USDMVR": 15.450257,
-    "USDMWK": 1735.285849,
-    "USDMXN": 17.98716,
-    "USDMYR": 4.054962,
-    "USDMZN": 63.909896,
-    "USDNAD": 16.565293,
-    "USDNGN": 1445.369687,
-    "USDNIO": 36.826906,
-    "USDNOK": 10.066045,
-    "USDNPR": 144.120729,
-    "USDNZD": 1.736995,
-    "USDOMR": 0.384498,
-    "USDPAB": 1.000716,
-    "USDPEN": 3.366031,
-    "USDPGK": 4.262823,
-    "USDPHP": 58.914962,
-    "USDPKR": 280.231968,
-    "USDPLN": 3.58845,
-    "USDPYG": 6569.722371,
-    "USDQAR": 3.640127,
-    "USDRON": 4.338396,
-    "USDRSD": 99.959868,
-    "USDRUB": 79.00477,
-    "USDRWF": 1458.083093,
-    "USDSAR": 3.750501,
-    "USDSBD": 8.136831,
-    "USDSCR": 13.817031,
-    "USDSDG": 601.502428,
-    "USDSEK": 9.202015,
-    "USDSGD": 1.285196,
-    "USDSHP": 0.750259,
-    "USDSLE": 24.050156,
-    "USDSLL": 20969.503664,
-    "USDSOS": 570.932045,
-    "USDSRD": 38.126497,
-    "USDSTD": 20697.981008,
-    "USDSTN": 20.871136,
-    "USDSVC": 8.756506,
-    "USDSYP": 11057.202013,
-    "USDSZL": 16.560607,
-    "USDTHB": 31.510253,
-    "USDTJS": 9.241824,
-    "USDTMT": 3.51,
-    "USDTND": 2.91815,
-    "USDTOP": 2.40776,
-    "USDTRY": 42.998992,
-    "USDTTD": 6.802286,
-    "USDTWD": 31.318497,
-    "USDTZS": 2470.316035,
-    "USDUAH": 42.338589,
-    "USDUGX": 3623.089636,
-    "USDUYU": 39.186789,
-    "USDUZS": 12013.255301,
-    "USDVES": 297.770445,
-    "USDVND": 26300,
-    "USDVUV": 120.790512,
-    "USDWST": 2.775488,
-    "USDXAF": 558.798674,
-    "USDXAG": 0.013939,
-    "USDXAU": 0.000231,
-    "USDXCD": 2.70255,
-    "USDXCG": 1.803607,
-    "USDXDR": 0.694966,
-    "USDXOF": 558.798674,
-    "USDXPF": 101.595577,
-    "USDYER": 238.450154,
-    "USDZAR": 16.566599,
-    "USDZMK": 9001.194317,
-    "USDZMW": 22.191554,
-    "USDZWL": 321.999592
-  }
+  "mcp.serverUrl": "http://localhost:8000",
+  "mcp.apiKey": "<your_api_key_if_needed>",
+  "mcp.timeout": 120000,
+  "mcp.tools": [
+    {
+      "name": "convert_currency_tool",
+      "command": "GET",
+      "url": "http://localhost:8000/tool/convert_currency_tool"
+    },
+    {
+      "name": "prime_rates_tool",
+      "command": "GET",
+      "url": "http://localhost:8000/tool/prime_rates_tool"
+    }
+  ]
 }
-
 ```
+
+3. Start the server:
+```bash
+python mcp_adapter/server.py
+```
+
+4. Use tool calls from VS Code tool side panel (as per extension docs).
+
+## Claude config
+
+Claude expects a JSON or YAML tool definition in its app settings:
+
+### Example `claude_tools.json`:
+```json
+[
+  {
+    "name": "convert_currency_tool",
+    "description": "Get conversion from given currency to USD on given date",
+    "url": "http://localhost:8000/tool/convert_currency_tool",
+    "method": "GET",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer <CLAUDE_API_TOKEN_IF_NEEDED>"
+    }
+  },
+  {
+    "name": "prime_rates_tool",
+    "description": "Get FRED prime rate observation for one day",
+    "url": "http://localhost:8000/tool/prime_rates_tool",
+    "method": "GET",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+]
+```
+
+Then in Claude UI/agent config: attach this tool file and invoke by name.
+
+## Using the tools
+
+1. `convert_currency_tool` - supported currency_code + date (YYYY-MM-DD or latest)
+2. `prime_rates_tool` - returns a time-series observation list from FRED for a single day
+
+Example:
+```bash
+curl "http://localhost:8000/tool/convert_currency_tool?currency_code=EUR&date_str=2026-01-01"
+curl "http://localhost:8000/tool/prime_rates_tool?date_str=2026-01-01"
+```
+
+## Troubleshooting
+- If `FRED_API_KEY` missing: service returns error JSON
+- If rate is not available, `usd_rate` may be null and message will indicate unavailable
+- If `date_str` invalid: returns JSON with format error
+
+## Additional notes
+- `mcp_adapter/server.py` has improved comments and tight error propagation in requests.
+- The `services.py` has input validation and handling for missing observation fields.
+
