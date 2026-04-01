@@ -1,7 +1,7 @@
-from mcp.server import Server
+from mcp.server import FastMCP
 from services import convert_currency_service, prime_rates_service
 
-server = Server("currency_mcp_server")
+server = FastMCP("currency_mcp_server")
 
 @server.tool() 
 def convert_currency_tool(currency_code: str = "INR", date_str: str = "latest") -> any:
