@@ -6,10 +6,12 @@ import json
 
 load_dotenv()
 FRED_API_KEY = os.environ.get("FRED_API_KEY")
+EXCHANGE_API_KEY = os.environ.get("EXCHANGE_API_KEY")
 EXCHANGE_RATE_URL = os.environ.get("EXCHANGE_RATE_URL")
 FRED_PRIME_RATE_URL = os.environ.get("FRED_BASE_URL")
 
 os.environ["FRED_API_KEY"] = FRED_API_KEY
+os.environ["EXCHANGE_API_KEY"] = EXCHANGE_API_KEY
 os.environ["EXCHANGE_RATE_URL"] = EXCHANGE_RATE_URL
 os.environ["FRED_BASE_URL"] = FRED_PRIME_RATE_URL
 
@@ -25,7 +27,7 @@ def convert_currency_service(currency_code: str, date_str: str) -> any:
         except ValueError:
             return json.dumps({"error": "Invalid date format. Please use YYYY-MM-DD or 'latest'."})
         
-        url = EXCHANGE_RATE_URL.format(date_str=date_str, currency_code=currency_code)
+        url = EXCHANGE_RATE_URL.format(date_str=date_str, currency_code=currency_code, EXCHANGE_API_KEY=EXCHANGE_API_KEY)
 
         response = requests.get(url)
         if response.status_code == 200:
